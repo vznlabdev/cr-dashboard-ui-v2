@@ -1,0 +1,257 @@
+"use client"
+
+import { Asset, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
+import { formatFileSize } from "@/lib/mock-data/creative"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import {
+  Download,
+  X,
+  Calendar,
+  User,
+  Palette,
+  Ticket,
+  Tag,
+  FileImage,
+  Maximize2,
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  FileText,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Package,
+  Image as ImageIcon,
+  Store,
+  CreditCard,
+  Sparkles,
+  LucideIcon,
+} from "lucide-react"
+
+// Map icon names to Lucide components
+const DESIGN_TYPE_ICONS: Record<string, LucideIcon> = {
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  Palette,
+  FileText,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Package,
+  Image: ImageIcon,
+  Store,
+  CreditCard,
+  Tag,
+  Sparkles,
+}
+import { format } from "date-fns"
+import Image from "next/image"
+import Link from "next/link"
+
+interface AssetPreviewModalProps {
+  asset: Asset | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function AssetPreviewModal({
+  asset,
+  open,
+  onOpenChange,
+}: AssetPreviewModalProps) {
+  if (!asset) return null
+
+  const fileTypeConfig = ASSET_FILE_TYPE_CONFIG[asset.fileType]
+  const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
+  const DesignIcon = DESIGN_TYPE_ICONS[designTypeConfig.iconName] || FileText
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="shrink-0">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <DialogTitle className="text-xl">{asset.name}</DialogTitle>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Badge variant="outline" className="text-xs">
+                  {fileTypeConfig.icon} {fileTypeConfig.label}
+                </Badge>
+                <span>•</span>
+                <span>{formatFileSize(asset.fileSize)}</span>
+                {asset.dimensions && (
+                  <>
+                    <span>•</span>
+                    <span>{asset.dimensions.width} × {asset.dimensions.height}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-auto">
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Preview */}
+            <div className="lg:col-span-2">
+              <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
+                {asset.fileType === "image" ? (
+                  <Image
+                    src={asset.thumbnailUrl}
+                    alt={asset.name}
+                    fill
+                    className="object-contain"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <FileImage className="h-16 w-16 text-muted-foreground/50 mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Preview not available for this file type
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Description */}
+              {asset.description && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium mb-1">Description</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {asset.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Tags */}
+              {asset.tags.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium mb-2">Tags</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {asset.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs">
+                        <Tag className="h-3 w-3 mr-1" />
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Details Sidebar */}
+            <div className="space-y-4">
+              {/* Download Button */}
+              <Button className="w-full" asChild>
+                <a href={asset.fileUrl} download>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </a>
+              </Button>
+
+              <Separator />
+
+              {/* Metadata */}
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <Palette className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Brand</p>
+                    <Link
+                      href={`/creative/brands/${asset.brandId}`}
+                      className="text-sm font-medium hover:underline flex items-center gap-2"
+                    >
+                      <div
+                        className="h-3 w-3 rounded-full"
+                        style={{ backgroundColor: asset.brandColor || "#666" }}
+                      />
+                      {asset.brandName}
+                    </Link>
+                  </div>
+                </div>
+
+                {asset.ticketId && asset.ticketTitle && (
+                  <div className="flex items-start gap-3">
+                    <Ticket className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">From Ticket</p>
+                      <Link
+                        href={`/creative/tickets/${asset.ticketId}`}
+                        className="text-sm font-medium hover:underline"
+                      >
+                        {asset.ticketTitle}
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-start gap-3">
+                  <FileImage className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Design Type</p>
+                    <p className="text-sm font-medium flex items-center gap-1.5">
+                      <DesignIcon className="h-4 w-4" />
+                      {designTypeConfig.label}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <User className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Uploaded By</p>
+                    <p className="text-sm font-medium">{asset.uploadedByName}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Calendar className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Date</p>
+                    <p className="text-sm font-medium">
+                      {format(asset.createdAt, "MMMM d, yyyy")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* File Info */}
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">File Size</span>
+                  <span className="font-medium">{formatFileSize(asset.fileSize)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Type</span>
+                  <span className="font-medium">{asset.mimeType}</span>
+                </div>
+                {asset.dimensions && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Dimensions</span>
+                    <span className="font-medium">
+                      {asset.dimensions.width} × {asset.dimensions.height}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+

@@ -68,6 +68,7 @@ export interface Ticket {
   designType: DesignType
   brandId: string
   brandName?: string
+  brandLogoUrl?: string
   brandColor?: string
   projectTag?: string
   targetAudience: string
@@ -127,6 +128,7 @@ export interface Inspiration {
 export interface Brand {
   id: string
   name: string
+  logoUrl?: string
   description: string
   targetAudience: string
   mission?: string
@@ -140,6 +142,50 @@ export interface Brand {
   inspirations: Inspiration[]
   createdAt: Date
   updatedAt: Date
+}
+
+// =============================================================================
+// ASSET LIBRARY TYPES
+// =============================================================================
+
+export type AssetFileType = "image" | "video" | "pdf" | "document" | "archive" | "other"
+
+export interface Asset {
+  id: string
+  name: string
+  description?: string
+  thumbnailUrl: string
+  fileUrl: string
+  fileType: AssetFileType
+  mimeType: string
+  fileSize: number // in bytes
+  dimensions?: { width: number; height: number }
+  brandId: string
+  brandName: string
+  brandColor?: string
+  brandLogoUrl?: string
+  ticketId?: string
+  ticketTitle?: string
+  designType: DesignType
+  tags: string[]
+  uploadedById: string
+  uploadedByName: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface AssetFilterConfig {
+  label: string
+  icon: string
+}
+
+export const ASSET_FILE_TYPE_CONFIG: Record<AssetFileType, AssetFilterConfig> = {
+  image: { label: "Images", icon: "🖼️" },
+  video: { label: "Videos", icon: "🎬" },
+  pdf: { label: "PDFs", icon: "📄" },
+  document: { label: "Documents", icon: "📝" },
+  archive: { label: "Archives", icon: "📦" },
+  other: { label: "Other", icon: "📎" },
 }
 
 // =============================================================================
@@ -218,26 +264,26 @@ export const TICKET_STATUS_CONFIG: Record<TicketStatus, TicketStatusConfig> = {
 
 export interface DesignTypeConfig {
   label: string
-  icon: string
+  iconName: string
 }
 
 export const DESIGN_TYPE_CONFIG: Record<DesignType, DesignTypeConfig> = {
-  digital_marketing: { label: "Digital Marketing", icon: "📊" },
-  social_media: { label: "Social Media", icon: "📱" },
-  ecommerce: { label: "Ecommerce", icon: "🛒" },
-  email: { label: "Email Design", icon: "✉️" },
-  logo_branding: { label: "Logo & Branding", icon: "🎨" },
-  pdf_ebook: { label: "PDF / eBook", icon: "📄" },
-  presentation: { label: "Presentation", icon: "📽️" },
-  web_design: { label: "Web Design", icon: "🌐" },
-  ux_ui: { label: "UX/UI Design", icon: "💻" },
-  print_merch: { label: "Print & Merch", icon: "👕" },
-  packaging: { label: "Packaging", icon: "📦" },
-  poster_flyer: { label: "Poster / Flyer", icon: "🪧" },
-  trade_show: { label: "Trade Show", icon: "🎪" },
-  business_card: { label: "Business Card", icon: "💳" },
-  sticker_keychain: { label: "Sticker / Keychain", icon: "🏷️" },
-  custom: { label: "Custom", icon: "✨" },
+  digital_marketing: { label: "Digital Marketing", iconName: "BarChart3" },
+  social_media: { label: "Social Media", iconName: "Share2" },
+  ecommerce: { label: "Ecommerce", iconName: "ShoppingCart" },
+  email: { label: "Email Design", iconName: "Mail" },
+  logo_branding: { label: "Logo & Branding", iconName: "Palette" },
+  pdf_ebook: { label: "PDF / eBook", iconName: "FileText" },
+  presentation: { label: "Presentation", iconName: "Presentation" },
+  web_design: { label: "Web Design", iconName: "Globe" },
+  ux_ui: { label: "UX/UI Design", iconName: "Layout" },
+  print_merch: { label: "Print & Merch", iconName: "Shirt" },
+  packaging: { label: "Packaging", iconName: "Package" },
+  poster_flyer: { label: "Poster / Flyer", iconName: "Image" },
+  trade_show: { label: "Trade Show", iconName: "Store" },
+  business_card: { label: "Business Card", iconName: "CreditCard" },
+  sticker_keychain: { label: "Sticker / Keychain", iconName: "Tag" },
+  custom: { label: "Custom", iconName: "Sparkles" },
 }
 
 export const PRIORITY_CONFIG = {
@@ -245,5 +291,58 @@ export const PRIORITY_CONFIG = {
   medium: { label: "Medium", color: "text-blue-600", bgColor: "bg-blue-500/10" },
   high: { label: "High", color: "text-amber-600", bgColor: "bg-amber-500/10" },
   urgent: { label: "Urgent", color: "text-red-600", bgColor: "bg-red-500/10" },
+}
+
+export interface WorkflowRoleConfig {
+  label: string
+  description: string
+  color: string
+  bgColor: string
+  borderColor: string
+}
+
+export const WORKFLOW_ROLE_CONFIG: Record<WorkflowRole, WorkflowRoleConfig> = {
+  assessment: {
+    label: "Assessment",
+    description: "Reviews tickets, estimates work, assigns creatives",
+    color: "text-purple-600",
+    bgColor: "bg-purple-500/10",
+    borderColor: "border-purple-500/30",
+  },
+  team_leader: {
+    label: "Team Leader",
+    description: "Balances workload, oversees progress",
+    color: "text-blue-600",
+    bgColor: "bg-blue-500/10",
+    borderColor: "border-blue-500/30",
+  },
+  creative: {
+    label: "Designer",
+    description: "Executes tasks, uploads versions, handles revisions",
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-500/10",
+    borderColor: "border-emerald-500/30",
+  },
+  qa: {
+    label: "QA Reviewer",
+    description: "Reviews deliverables, approves or returns work",
+    color: "text-cyan-600",
+    bgColor: "bg-cyan-500/10",
+    borderColor: "border-cyan-500/30",
+  },
+  external_contributor: {
+    label: "External",
+    description: "Restricted to assigned tasks only",
+    color: "text-amber-600",
+    bgColor: "bg-amber-500/10",
+    borderColor: "border-amber-500/30",
+  },
+  client: {
+    label: "Client",
+    description: "Submits requests, reviews deliverables",
+    color: "text-slate-600",
+    bgColor: "bg-slate-500/10",
+    borderColor: "border-slate-500/30",
+  },
 }
 

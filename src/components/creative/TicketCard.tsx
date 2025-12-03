@@ -1,18 +1,54 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { Ticket, DESIGN_TYPE_CONFIG, PRIORITY_CONFIG } from "@/types/creative"
+import { Ticket, DESIGN_TYPE_CONFIG } from "@/types/creative"
 import { TicketStatusBadge } from "./TicketStatusBadge"
-import { Card } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Card, CardContent } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { 
   Calendar, 
   Clock, 
   MessageSquare, 
   Paperclip,
-  AlertCircle,
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  Palette,
+  FileText,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Package,
+  Image,
+  Store,
+  CreditCard,
+  Tag,
+  Sparkles,
+  LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
+
+// Map icon names to Lucide components
+const DESIGN_TYPE_ICONS: Record<string, LucideIcon> = {
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  Palette,
+  FileText,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Package,
+  Image,
+  Store,
+  CreditCard,
+  Tag,
+  Sparkles,
+}
 
 interface TicketCardProps {
   ticket: Ticket
@@ -28,7 +64,7 @@ export function TicketCard({
   isDragging = false,
 }: TicketCardProps) {
   const designType = DESIGN_TYPE_CONFIG[ticket.designType]
-  const priority = PRIORITY_CONFIG[ticket.priority]
+  const DesignIcon = DESIGN_TYPE_ICONS[designType.iconName] || FileText
 
   const getInitials = (name: string) => {
     return name
@@ -46,18 +82,20 @@ export function TicketCard({
     }).format(new Date(date))
   }
 
-  const isOverdue = ticket.dueDate && new Date(ticket.dueDate) < new Date() && ticket.status !== "delivered"
+  // Calculate progress for production tickets
+  const progress = ticket.status === "production" && ticket.estimatedHours
+    ? Math.min((ticket.trackedTime / ticket.estimatedHours) * 100, 100)
+    : null
 
   if (variant === "compact") {
     return (
       <Link href={`/creative/tickets/${ticket.id}`}>
         <Card
           className={cn(
-            "p-3 hover:shadow-md transition-all cursor-pointer border-l-4",
-            isDragging && "shadow-lg rotate-2 scale-105",
+            "p-3 hover:bg-accent/50 transition-colors cursor-pointer",
+            isDragging && "shadow-lg",
             className
           )}
-          style={{ borderLeftColor: ticket.brandColor || "#3b82f6" }}
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium truncate flex-1">{ticket.title}</span>
@@ -73,29 +111,31 @@ export function TicketCard({
       <Link href={`/creative/tickets/${ticket.id}`}>
         <Card
           className={cn(
-            "p-4 hover:shadow-md transition-all cursor-pointer",
+            "py-0 hover:bg-accent/50 transition-colors cursor-pointer",
             isDragging && "shadow-lg",
             className
           )}
         >
+          <CardContent className="p-5">
           <div className="flex items-center gap-4">
-            {/* Brand Color Bar */}
-            <div
-              className="w-1 h-12 rounded-full shrink-0"
-              style={{ backgroundColor: ticket.brandColor || "#3b82f6" }}
-            />
-
             {/* Main Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm">{designType.icon}</span>
+                <DesignIcon className="h-4 w-4 text-muted-foreground" />
                 <h3 className="font-medium truncate">{ticket.title}</h3>
-                {ticket.priority === "urgent" && (
-                  <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
-                )}
               </div>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span>{ticket.brandName}</span>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  {ticket.brandLogoUrl && (
+                    <Avatar className="h-4 w-4">
+                      <AvatarImage src={ticket.brandLogoUrl} alt={ticket.brandName} />
+                      <AvatarFallback className="text-[8px]" style={{ backgroundColor: ticket.brandColor }}>
+                        {ticket.brandName?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                  <span>{ticket.brandName}</span>
+                </div>
                 <span>•</span>
                 <span>{designType.label}</span>
               </div>
@@ -106,129 +146,134 @@ export function TicketCard({
 
             {/* Assignee */}
             {ticket.assigneeName ? (
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="text-xs bg-primary/10">
+              <Avatar className="h-7 w-7">
+                <AvatarImage src={ticket.assigneeAvatar} alt={ticket.assigneeName} />
+                <AvatarFallback className="text-xs bg-muted">
                   {getInitials(ticket.assigneeName)}
                 </AvatarFallback>
               </Avatar>
             ) : (
-              <div className="h-8 w-8 rounded-full border-2 border-dashed border-muted-foreground/30" />
+              <div className="h-7 w-7 rounded-full border border-dashed border-muted-foreground/30" />
             )}
 
             {/* Due Date */}
             {ticket.dueDate && (
-              <div
-                className={cn(
-                  "flex items-center gap-1 text-xs",
-                  isOverdue ? "text-red-500" : "text-muted-foreground"
-                )}
-              >
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Calendar className="h-3 w-3" />
                 {formatDate(ticket.dueDate)}
               </div>
             )}
           </div>
+          </CardContent>
         </Card>
       </Link>
     )
   }
 
-  // Kanban variant (default)
+  // Kanban variant (default) - Minimal design
   return (
     <Link href={`/creative/tickets/${ticket.id}`}>
       <Card
         className={cn(
-          "p-3 hover:shadow-md transition-all cursor-pointer group",
-          isDragging && "shadow-lg rotate-1 scale-[1.02]",
-          isOverdue && "ring-1 ring-red-500/50",
+          "py-0 transition-all cursor-pointer group bg-card",
+          "hover:bg-accent/50 hover:shadow-sm",
+          isDragging && "shadow-md ring-1 ring-primary/20",
           className
         )}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <div
-              className="w-2 h-2 rounded-full shrink-0"
-              style={{ backgroundColor: ticket.brandColor || "#3b82f6" }}
-            />
+        <CardContent className="p-5">
+        {/* Header: Brand + Priority */}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            {ticket.brandLogoUrl && (
+              <Avatar className="h-4 w-4 shrink-0">
+                <AvatarImage src={ticket.brandLogoUrl} alt={ticket.brandName} />
+                <AvatarFallback className="text-[8px]" style={{ backgroundColor: ticket.brandColor }}>
+                  {ticket.brandName?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            )}
             <span className="text-xs text-muted-foreground truncate">
               {ticket.brandName}
             </span>
           </div>
-          {ticket.priority === "urgent" && (
-            <span className={cn("text-xs px-1.5 py-0.5 rounded", priority.bgColor, priority.color)}>
-              Urgent
-            </span>
-          )}
-          {ticket.priority === "high" && (
-            <span className={cn("text-xs px-1.5 py-0.5 rounded", priority.bgColor, priority.color)}>
-              High
-            </span>
-          )}
+          <span className={cn(
+            "text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0",
+            ticket.priority === "urgent" && "bg-red-500/15 text-red-600",
+            ticket.priority === "high" && "bg-orange-500/15 text-orange-600",
+            ticket.priority === "medium" && "bg-blue-500/15 text-blue-600",
+            ticket.priority === "low" && "bg-slate-500/15 text-slate-500",
+          )}>
+            {ticket.priority === "urgent" && "Urgent"}
+            {ticket.priority === "high" && "High"}
+            {ticket.priority === "medium" && "Medium"}
+            {ticket.priority === "low" && "Low"}
+          </span>
         </div>
 
         {/* Title */}
-        <h3 className="font-medium text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+        <h3 className="font-medium text-sm mb-2 line-clamp-2 leading-snug">
           {ticket.title}
         </h3>
 
         {/* Design Type */}
-        <div className="flex items-center gap-1.5 mb-3">
-          <span className="text-sm">{designType.icon}</span>
-          <span className="text-xs text-muted-foreground">{designType.label}</span>
+        <div className="flex items-center gap-1.5 mb-3 text-muted-foreground">
+          <DesignIcon className="h-3.5 w-3.5" />
+          <span className="text-xs">{designType.label}</span>
         </div>
+
+        {/* Progress Bar (for production tickets) */}
+        {progress !== null && (
+          <div className="mb-3">
+            <div className="h-1 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary/60 rounded-full transition-all"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-          {/* Left: Assignee */}
-          <div className="flex items-center gap-2">
-            {ticket.assigneeName ? (
-              <Avatar className="h-6 w-6">
-                <AvatarFallback className="text-[10px] bg-primary/10">
-                  {getInitials(ticket.assigneeName)}
-                </AvatarFallback>
-              </Avatar>
-            ) : (
-              <div className="h-6 w-6 rounded-full border-2 border-dashed border-muted-foreground/30" />
-            )}
-          </div>
+        <div className="flex items-center justify-between pt-2 border-t border-border/40">
+          {/* Assignee */}
+          {ticket.assigneeName ? (
+            <Avatar className="h-5 w-5">
+              <AvatarImage src={ticket.assigneeAvatar} alt={ticket.assigneeName} />
+              <AvatarFallback className="text-[10px] bg-muted">
+                {getInitials(ticket.assigneeName)}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <div className="h-5 w-5 rounded-full border border-dashed border-muted-foreground/30" />
+          )}
 
-          {/* Right: Meta info */}
-          <div className="flex items-center gap-3 text-muted-foreground">
-            {/* Comments count */}
+          {/* Meta info */}
+          <div className="flex items-center gap-2 text-muted-foreground">
             {ticket.comments.length > 0 && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5 text-xs">
                 <MessageSquare className="h-3 w-3" />
-                <span className="text-xs">{ticket.comments.length}</span>
+                <span>{ticket.comments.length}</span>
               </div>
             )}
 
-            {/* Attachments count */}
             {(ticket.attachments.length > 0 || ticket.versions.length > 0) && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5 text-xs">
                 <Paperclip className="h-3 w-3" />
-                <span className="text-xs">
-                  {ticket.attachments.length + ticket.versions.length}
-                </span>
+                <span>{ticket.attachments.length + ticket.versions.length}</span>
               </div>
             )}
 
-            {/* Due date */}
             {ticket.dueDate && (
-              <div
-                className={cn(
-                  "flex items-center gap-1",
-                  isOverdue ? "text-red-500" : ""
-                )}
-              >
+              <div className="flex items-center gap-0.5 text-xs">
                 <Clock className="h-3 w-3" />
-                <span className="text-xs">{formatDate(ticket.dueDate)}</span>
+                <span>{formatDate(ticket.dueDate)}</span>
               </div>
             )}
           </div>
         </div>
+        </CardContent>
       </Card>
     </Link>
   )
 }
-
