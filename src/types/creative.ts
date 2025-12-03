@@ -247,3 +247,56 @@ export const PRIORITY_CONFIG = {
   urgent: { label: "Urgent", color: "text-red-600", bgColor: "bg-red-500/10" },
 }
 
+export interface WorkflowRoleConfig {
+  label: string
+  description: string
+  color: string
+  bgColor: string
+  borderColor: string
+}
+
+export const WORKFLOW_ROLE_CONFIG: Record<WorkflowRole, WorkflowRoleConfig> = {
+  assessment: {
+    label: "Assessment",
+    description: "Reviews tickets, estimates work, assigns creatives",
+    color: "text-purple-600",
+    bgColor: "bg-purple-500/10",
+    borderColor: "border-purple-500/30",
+  },
+  team_leader: {
+    label: "Team Leader",
+    description: "Balances workload, oversees progress",
+    color: "text-blue-600",
+    bgColor: "bg-blue-500/10",
+    borderColor: "border-blue-500/30",
+  },
+  creative: {
+    label: "Designer",
+    description: "Executes tasks, uploads versions, handles revisions",
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-500/10",
+    borderColor: "border-emerald-500/30",
+  },
+  qa: {
+    label: "QA Reviewer",
+    description: "Reviews deliverables, approves or returns work",
+    color: "text-cyan-600",
+    bgColor: "bg-cyan-500/10",
+    borderColor: "border-cyan-500/30",
+  },
+  external_contributor: {
+    label: "External",
+    description: "Restricted to assigned tasks only",
+    color: "text-amber-600",
+    bgColor: "bg-amber-500/10",
+    borderColor: "border-amber-500/30",
+  },
+  client: {
+    label: "Client",
+    description: "Submits requests, reviews deliverables",
+    color: "text-slate-600",
+    bgColor: "bg-slate-500/10",
+    borderColor: "border-slate-500/30",
+  },
+}
+

@@ -6,4 +6,7 @@ export { KanbanColumn } from "./KanbanColumn"
 export { BrandCard } from "./BrandCard"
 export { ColorPalette, ColorSwatches } from "./ColorPalette"
 export { FontPreview } from "./FontPreview"
+export { TeamMemberCard } from "./TeamMemberCard"
+export { WorkloadBar, WorkloadIndicator } from "./WorkloadBar"
+export { RoleBadge } from "./RoleBadge"
 
