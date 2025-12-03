@@ -143,6 +143,49 @@ export interface Brand {
 }
 
 // =============================================================================
+// ASSET LIBRARY TYPES
+// =============================================================================
+
+export type AssetFileType = "image" | "video" | "pdf" | "document" | "archive" | "other"
+
+export interface Asset {
+  id: string
+  name: string
+  description?: string
+  thumbnailUrl: string
+  fileUrl: string
+  fileType: AssetFileType
+  mimeType: string
+  fileSize: number // in bytes
+  dimensions?: { width: number; height: number }
+  brandId: string
+  brandName: string
+  brandColor?: string
+  ticketId?: string
+  ticketTitle?: string
+  designType: DesignType
+  tags: string[]
+  uploadedById: string
+  uploadedByName: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface AssetFilterConfig {
+  label: string
+  icon: string
+}
+
+export const ASSET_FILE_TYPE_CONFIG: Record<AssetFileType, AssetFilterConfig> = {
+  image: { label: "Images", icon: "🖼️" },
+  video: { label: "Videos", icon: "🎬" },
+  pdf: { label: "PDFs", icon: "📄" },
+  document: { label: "Documents", icon: "📝" },
+  archive: { label: "Archives", icon: "📦" },
+  other: { label: "Other", icon: "📎" },
+}
+
+// =============================================================================
 // TEAM TYPES
 // =============================================================================
 
