@@ -5,12 +5,15 @@ import { Ticket, DESIGN_TYPE_CONFIG, PRIORITY_CONFIG } from "@/types/creative"
 import { TicketStatusBadge } from "./TicketStatusBadge"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { 
   Calendar, 
   Clock, 
   MessageSquare, 
   Paperclip,
   AlertCircle,
+  Flame,
+  ArrowRight,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -47,6 +50,14 @@ export function TicketCard({
   }
 
   const isOverdue = ticket.dueDate && new Date(ticket.dueDate) < new Date() && ticket.status !== "delivered"
+  const isDueSoon = ticket.dueDate && !isOverdue && 
+    new Date(ticket.dueDate).getTime() - new Date().getTime() < 3 * 24 * 60 * 60 * 1000 &&
+    ticket.status !== "delivered"
+
+  // Calculate progress for production tickets
+  const progress = ticket.status === "production" && ticket.estimatedHours
+    ? Math.min((ticket.trackedTime / ticket.estimatedHours) * 100, 100)
+    : null
 
   if (variant === "compact") {
     return (
@@ -133,102 +144,141 @@ export function TicketCard({
     )
   }
 
-  // Kanban variant (default)
+  // Kanban variant (default) - Enhanced
   return (
     <Link href={`/creative/tickets/${ticket.id}`}>
       <Card
         className={cn(
-          "p-3 hover:shadow-md transition-all cursor-pointer group",
-          isDragging && "shadow-lg rotate-1 scale-[1.02]",
-          isOverdue && "ring-1 ring-red-500/50",
+          "relative overflow-hidden transition-all cursor-pointer group",
+          "hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/30",
+          isDragging && "shadow-xl rotate-2 scale-105 ring-2 ring-primary/50",
+          isOverdue && "ring-1 ring-red-500/50 bg-red-500/5",
+          isDueSoon && !isOverdue && "ring-1 ring-amber-500/30",
           className
         )}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <div
-              className="w-2 h-2 rounded-full shrink-0"
-              style={{ backgroundColor: ticket.brandColor || "#3b82f6" }}
-            />
-            <span className="text-xs text-muted-foreground truncate">
-              {ticket.brandName}
-            </span>
-          </div>
-          {ticket.priority === "urgent" && (
-            <span className={cn("text-xs px-1.5 py-0.5 rounded", priority.bgColor, priority.color)}>
-              Urgent
-            </span>
-          )}
-          {ticket.priority === "high" && (
-            <span className={cn("text-xs px-1.5 py-0.5 rounded", priority.bgColor, priority.color)}>
-              High
-            </span>
-          )}
-        </div>
+        {/* Brand Color Accent - Left Border */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1 rounded-l"
+          style={{ backgroundColor: ticket.brandColor || "#3b82f6" }}
+        />
 
-        {/* Title */}
-        <h3 className="font-medium text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-          {ticket.title}
-        </h3>
-
-        {/* Design Type */}
-        <div className="flex items-center gap-1.5 mb-3">
-          <span className="text-sm">{designType.icon}</span>
-          <span className="text-xs text-muted-foreground">{designType.label}</span>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-          {/* Left: Assignee */}
-          <div className="flex items-center gap-2">
-            {ticket.assigneeName ? (
-              <Avatar className="h-6 w-6">
-                <AvatarFallback className="text-[10px] bg-primary/10">
-                  {getInitials(ticket.assigneeName)}
-                </AvatarFallback>
-              </Avatar>
-            ) : (
-              <div className="h-6 w-6 rounded-full border-2 border-dashed border-muted-foreground/30" />
-            )}
-          </div>
-
-          {/* Right: Meta info */}
-          <div className="flex items-center gap-3 text-muted-foreground">
-            {/* Comments count */}
-            {ticket.comments.length > 0 && (
-              <div className="flex items-center gap-1">
-                <MessageSquare className="h-3 w-3" />
-                <span className="text-xs">{ticket.comments.length}</span>
-              </div>
-            )}
-
-            {/* Attachments count */}
-            {(ticket.attachments.length > 0 || ticket.versions.length > 0) && (
-              <div className="flex items-center gap-1">
-                <Paperclip className="h-3 w-3" />
-                <span className="text-xs">
-                  {ticket.attachments.length + ticket.versions.length}
-                </span>
-              </div>
-            )}
-
-            {/* Due date */}
-            {ticket.dueDate && (
-              <div
+        <div className="p-3 pl-4">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <span className="text-xs text-muted-foreground truncate">
+                {ticket.brandName}
+              </span>
+            </div>
+            {(ticket.priority === "urgent" || ticket.priority === "high") && (
+              <Badge
+                variant="outline"
                 className={cn(
-                  "flex items-center gap-1",
-                  isOverdue ? "text-red-500" : ""
+                  "shrink-0 text-[10px] px-1.5 py-0 h-5 font-semibold gap-1",
+                  ticket.priority === "urgent" 
+                    ? "border-red-500/50 bg-red-500/10 text-red-600" 
+                    : "border-amber-500/50 bg-amber-500/10 text-amber-600"
                 )}
               >
-                <Clock className="h-3 w-3" />
-                <span className="text-xs">{formatDate(ticket.dueDate)}</span>
-              </div>
+                {ticket.priority === "urgent" && <Flame className="h-3 w-3" />}
+                {ticket.priority === "urgent" ? "Urgent" : "High"}
+              </Badge>
             )}
           </div>
+
+          {/* Title */}
+          <h3 className="font-semibold text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">
+            {ticket.title}
+          </h3>
+
+          {/* Design Type */}
+          <div className="flex items-center gap-1.5 mb-3">
+            <span className="text-base">{designType.icon}</span>
+            <span className="text-xs text-muted-foreground font-medium">{designType.label}</span>
+          </div>
+
+          {/* Progress Bar (for production tickets) */}
+          {progress !== null && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                <span>Progress</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-2 border-t border-border/50">
+            {/* Left: Assignee */}
+            <div className="flex items-center gap-2">
+              {ticket.assigneeName ? (
+                <div className="flex items-center gap-1.5">
+                  <Avatar className="h-6 w-6 ring-2 ring-background">
+                    <AvatarFallback className="text-[10px] bg-primary/10 font-medium">
+                      {getInitials(ticket.assigneeName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-xs text-muted-foreground hidden sm:inline">
+                    {ticket.assigneeName.split(" ")[0]}
+                  </span>
+                </div>
+              ) : (
+                <div className="h-6 w-6 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                  <span className="text-[10px] text-muted-foreground/50">?</span>
+                </div>
+              )}
+            </div>
+
+            {/* Right: Meta info */}
+            <div className="flex items-center gap-2 text-muted-foreground">
+              {/* Comments count */}
+              {ticket.comments.length > 0 && (
+                <div className="flex items-center gap-0.5 text-xs bg-muted/50 px-1.5 py-0.5 rounded">
+                  <MessageSquare className="h-3 w-3" />
+                  <span>{ticket.comments.length}</span>
+                </div>
+              )}
+
+              {/* Attachments count */}
+              {(ticket.attachments.length > 0 || ticket.versions.length > 0) && (
+                <div className="flex items-center gap-0.5 text-xs bg-muted/50 px-1.5 py-0.5 rounded">
+                  <Paperclip className="h-3 w-3" />
+                  <span>{ticket.attachments.length + ticket.versions.length}</span>
+                </div>
+              )}
+
+              {/* Due date */}
+              {ticket.dueDate && (
+                <div
+                  className={cn(
+                    "flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded",
+                    isOverdue 
+                      ? "bg-red-500/10 text-red-600 font-medium" 
+                      : isDueSoon 
+                        ? "bg-amber-500/10 text-amber-600" 
+                        : "bg-muted/50"
+                  )}
+                >
+                  <Clock className="h-3 w-3" />
+                  <span>{formatDate(ticket.dueDate)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Hover Arrow Indicator */}
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0 -translate-x-2">
+          <ArrowRight className="h-4 w-4 text-primary" />
         </div>
       </Card>
     </Link>
   )
 }
-
